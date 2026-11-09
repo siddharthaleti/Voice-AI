@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vaani Duplex — Full-Duplex Multilingual Indian Voice Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: rgba(18, 22, 34, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #06b6d4;
+      --accent-indigo: #6366f1;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      background: rgba(7, 9, 14, 0.7);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #fff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: block;
+      font-family: var(--font-mono);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .provider-select-wrapper {
+      position: relative;
+    }
+
+    select.provider-select {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 0.55rem 1rem;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select.provider-select:hover {
+      border-color: var(--accent-cyan);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: all 0.3s;
+    }
+
+    .status-dot.connected {
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+    }
+
+    .status-dot.listening {
+      background: var(--accent-cyan);
+      box-shadow: 0 0 12px var(--accent-cyan);
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-dot.speaking {
+      background: var(--accent-indigo);
+      box-shadow: 0 0 14px var(--accent-indigo);
+      animation: pulse 0.8s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    /* Container */
+    main {
+      flex: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 2rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Telemetry Grid */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .telemetry-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .telemetry-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .telemetry-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+      opacity: 0.3;
+    }
+
+    .telemetry-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+
+    .telemetry-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+    }
+
+    .telemetry-value small {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .telemetry-badge {
+      display: inline-block;
+      margin-top: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .badge-sub800 {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-lang {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent-indigo);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    /* Workspace Split */
+    .workspace-split {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.5rem;
+      flex: 1;
+      min-height: 520px;
+    }
+
+    /* Left Console: Controls, Visualizer, Conversation */
+    .console-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .console-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .console-header h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Mic Controls & Visualizer */
+    .audio-control-bar {
+      padding: 1.25rem;
+      background: rgba(11, 15, 25, 0.6);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .mic-button {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+      border: none;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .mic-button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.55);
+    }
+
+    .mic-button.active {
+      background: linear-gradient(135deg, var(--accent-rose), #e11d48);
+      box-shadow: 0 0 25px rgba(244, 63, 94, 0.55);
+    }
+
+    .visualizer-box {
+      flex: 1;
+      height: 48px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    canvas#waveformCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Conversation Feed */
+    .conversation-feed {
+      flex: 1;
+      padding: 1.25rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 460px;
+    }
+
+    .message-bubble {
+      max-width: 88%;
+      padding: 0.9rem 1.15rem;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      position: relative;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(51, 65, 85, 0.8));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message-assistant {
+      align-self: flex-start;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.7));
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: #f8fafc;
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    /* Event pills */
+    .event-pill {
+      align-self: center;
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .event-barge-in {
+      background: rgba(244, 63, 94, 0.18);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
+    }
+
+    .event-tool {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    /* Quick Prompt Chips */
+    .quick-prompts {
+      padding: 0.85rem 1.25rem;
+      border-top: 1px solid var(--card-border);
+      background: rgba(11, 15, 25, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      overflow-x: auto;
+    }
+
+    .quick-prompts span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .prompt-chip {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .prompt-chip:hover {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: var(--accent-indigo);
+      color: #fff;
+    }
+
+    /* Right Panel: Stateful Tool Inspector */
+    .state-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(11, 15, 25, 0.7);
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 0.9rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent-cyan);
+      border-bottom-color: var(--accent-cyan);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab-content {
+      flex: 1;
+      padding: 1.25rem;
+      overflow-y: auto;
+      max-height: 480px;
+    }
+
+    pre.json-viewer {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: #a5f3fc;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow-x: auto;
+    }
+
+    /* Flash overlay on barge-in */
+    #bargeInOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(244, 63, 94, 0.15);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      z-index: 100;
+    }
+
+    #bargeInOverlay.flash {
+      opacity: 1;
+    }
+
+    @media (max-width: 960px) {
+      .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
+      .workspace-split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barge-in flash effect -->
+  <div id="bargeInOverlay"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">V</div>
+      <div class="brand-title">
+        <h1>Vaani Duplex</h1>
+        <span>Full-Duplex Multilingual Indic Voice Agent</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="provider-select-wrapper">
+        <select id="speechProviderSelect" class="provider-select" onchange="changeProvider(this.value)">
+          <option value="free">₹0 Free: Groq Whisper + Edge-TTS</option>
+          <option value="sarvam">Sarvam AI: Saaras v4 + Bulbul v3</option>
+        </select>
+      </div>
+      <div class="status-pill">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusLabel">Connecting...</span>
+      </div>
+      <button class="prompt-chip" onclick="resetDatabaseState()" title="Reset appointments, tickets, and order demo data">
+        🔄 Reset State
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main>
+    <!-- Telemetry Cards -->
+    <section class="telemetry-grid">
+      <div class="telemetry-card">
+        <div class="telemetry-label">ASR Latency</div>
+        <div class="telemetry-value"><span id="telemetryAsr">---</span> <small>ms</small></div>
+        <span class="telemetry-badge" id="telemetryAsrBadge">Speech-to-Text</span>
+      </div>
+      <div class="telemetry-card">
+        <div class="telemetry-label">Groq TTFT</div>
+        <div class="telemetry-value"><span id="telemetryTtft">---</span> <small>ms</small></div>
+        <span class="telemetry-badge" id="telemetryTtftBadge">Time-to-First-Token</span>
+      </div>
+      <div class="telemetry-card">
+        <div class="telemetry-label">End-to-End TTFA</div>
+        <div class="telemetry-value"><span id="telemetryTtfa">---</span> <small>ms</small></div>
+        <span class="telemetry-badge badge-sub800" id="telemetryTtfaBadge">Target &lt; 800ms</span>
+      </div>
+      <div class="telemetry-card">
+        <div class="telemetry-label">Active Language</div>
+        <div class="telemetry-value" style="font-size: 1.5rem;"><span id="telemetryLang">en-IN</span></div>
+        <span class="telemetry-badge badge-lang" id="telemetryLangBadge">Indic Code-Switch</span>
+      </div>
+    </section>
+
+    <!-- Workspace Split -->
+    <section class="workspace-split">
+      <!-- Left: Audio Stream & Conversation -->
+      <div class="console-panel">
+        <div class="console-header">
+          <h3>🎙️ Live Voice Interaction</h3>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">
+            16kHz Int16 Mono PCM Full-Duplex
+          </span>
+        </div>
+
+        <!-- Audio Control Bar -->
+        <div class="audio-control-bar">
+          <button id="micButton" class="mic-button" onclick="toggleMicrophone()">
+            <svg id="micIcon" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+            <span id="micButtonText">Start Microphone</span>
+          </button>
+          <div class="visualizer-box">
+            <canvas id="waveformCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Conversation Feed -->
+        <div class="conversation-feed" id="conversationFeed">
+          <div class="message-bubble message-assistant">
+            <div class="msg-header">
+              <span>VAANI</span>
+              <span>READY</span>
+            </div>
+            Namaste! I am Vaani. You can speak to me in Hindi, Telugu, or Indian English with natural code-switching. Try checking your order ORD-9921 or scheduling a meeting!
+          </div>
+        </div>
+
+        <!-- Quick Prompts -->
+        <div class="quick-prompts">
+          <span>Quick Voice Prompts:</span>
+          <button class="prompt-chip" onclick="simulateVoicePrompt('Rohan Sharma ke saath kal dopahar 2 baje quarterly review meeting schedule karo')">
+            🗓️ Hinglish: Meeting Schedule
+          </button>
+          <button class="prompt-chip" onclick="simulateVoicePrompt('Naa order ORD-9921 status emititi? Delivery eppudu vastundi?')">
+            📦 Telugish: Check ORD-9921
+          </button>
+          <button class="prompt-chip" onclick="simulateVoicePrompt('Checkout par UPI payment fail ho gaya, high priority ticket banao')">
+            🎫 Hindi: Support Ticket
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Live State Inspector -->
+      <div class="state-panel">
+        <div class="tabs-header">
+          <button class="tab-btn active" onclick="switchTab('orders')">📦 Orders (ORD-9921 / 4410)</button>
+          <button class="tab-btn" onclick="switchTab('appointments')">🗓️ Appointments</button>
+          <button class="tab-btn" onclick="switchTab('tickets')">🎫 Support Tickets</button>
+        </div>
+        <div class="tab-content" id="tabContent">
+          <pre class="json-viewer" id="jsonViewer">Loading state...</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Global State
+    let ws = null;
+    let audioContext = null;
+    let mediaStream = null;
+    let scriptProcessor = null;
+    let isRecording = false;
+    let currentProvider = "free";
+    let activeTab = "orders";
+    let liveState = {};
+
+    // Audio Playback Queue
+    let audioQueue = [];
+    let isPlayingAudio = false;
+    let currentAudioElement = null;
+
+    // Visualizer Canvas
+    const canvas = document.getElementById("waveformCanvas");
+    const canvasCtx = canvas.getContext("2d");
+    let analyserNode = null;
+    let animFrameId = null;
+
+    // Initialize WebSocket
+    function connectWebSocket() {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws/voice`;
+      ws = new WebSocket(wsUrl);
+      ws.binaryType = "arraybuffer";
+
+      ws.onopen = () => {
+        updateStatus("connected", "Connected");
+      };
+
+      ws.onmessage = async (event) => {
+        if (typeof event.data === "string") {
+          try {
+            const msg = JSON.parse(event.data);
+            handleServerMessage(msg);
+          } catch (e) {
+            console.error("Error parsing WS message:", e);
+          }
+        }
+      };
+
+      ws.onclose = () => {
+        updateStatus("disconnected", "Disconnected");
+        setTimeout(connectWebSocket, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error("WebSocket error:", err);
+      };
+    }
+
+    function updateStatus(state, label) {
+      const dot = document.getElementById("statusDot");
+      const text = document.getElementById("statusLabel");
+      dot.className = `status-dot ${state}`;
+      text.innerText = label;
+    }
+
+    function handleServerMessage(msg) {
+      if (msg.type === "ready") {
+        liveState = msg.session_state || {};
+        renderStateViewer();
+        if (msg.active_provider) {
+          document.getElementById("speechProviderSelect").value = msg.active_provider;
+          currentProvider = msg.active_provider;
+        }
+      } else if (msg.type === "telemetry") {
+        if (msg.asr_ms !== null) {
+          document.getElementById("telemetryAsr").innerText = msg.asr_ms;
+        }
+        if (msg.ttft_ms !== null) {
+          document.getElementById("telemetryTtft").innerText = msg.ttft_ms;
+        }
+        if (msg.ttfa_ms !== null) {
+          const ttfaElem = document.getElementById("telemetryTtfa");
+          ttfaElem.innerText = msg.ttfa_ms;
+          const badge = document.getElementById("telemetryTtfaBadge");
+          if (msg.ttfa_ms <= 800) {
+            badge.className = "telemetry-badge badge-sub800";
+            badge.innerText = `Sub-800ms (${msg.ttfa_ms}ms)`;
+          } else {
+            badge.className = "telemetry-badge";
+            badge.style.background = "rgba(245, 158, 11, 0.15)";
+            badge.style.color = "var(--accent-amber)";
+            badge.innerText = `${msg.ttfa_ms}ms`;
+          }
+        }
+        if (msg.lang) {
+          document.getElementById("telemetryLang").innerText = msg.lang;
+        }
+      } else if (msg.type === "transcript") {
+        appendTranscript(msg.role, msg.text, msg.lang);
+      } else if (msg.type === "audio") {
+        enqueueAudioClause(msg.audio_base64, msg.mime_type, msg.clause);
+      } else if (msg.type === "tool_call") {
+        appendToolEvent(msg.name, msg.result);
+        if (msg.session_state) {
+          liveState = msg.session_state;
+          renderStateViewer();
+        }
+      } else if (msg.type === "event") {
+        if (msg.name === "BARGE_IN") {
+          appendBargeInEvent();
+          triggerBargeInFlash();
+        } else if (msg.name === "SPEECH_START") {
+          updateStatus("listening", "Listening...");
+        } else if (msg.name === "SPEECH_END") {
+          updateStatus("connected", "Processing Turn...");
+        }
+      } else if (msg.type === "control") {
+        if (msg.action === "clear_playback") {
+          flushAudioPlayback();
+          triggerBargeInFlash();
+        }
+      }
+    }
+
+    // Audio Playback Queue and Instant Barge-In Clearance (<15ms)
+    function enqueueAudioClause(base64Audio, mimeType, clauseText) {
+      const byteCharacters = atob(base64Audio);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      const audioUrl = URL.createObjectURL(blob);
+
+      audioQueue.push({ url: audioUrl, clause: clauseText });
+      if (!isPlayingAudio) {
+        playNextClause();
+      }
+    }
+
+    function playNextClause() {
+      if (audioQueue.length === 0) {
+        isPlayingAudio = false;
+        updateStatus("connected", "Connected");
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "playback_finished" }));
+        }
+        return;
+      }
+
+      isPlayingAudio = true;
+      updateStatus("speaking", "Vaani Speaking...");
+      const item = audioQueue.shift();
+
+      currentAudioElement = new Audio(item.url);
+      currentAudioElement.onended = () => {
+        URL.revokeObjectURL(item.url);
+        currentAudioElement = null;
+        playNextClause();
+      };
+
+      currentAudioElement.onerror = (e) => {
+        console.warn("Audio playback error:", e);
+        URL.revokeObjectURL(item.url);
+        currentAudioElement = null;
+        playNextClause();
+      };
+
+      currentAudioElement.play().catch(e => {
+        console.warn("Autoplay block / error:", e);
+        playNextClause();
+      });
+    }
+
+    function flushAudioPlayback() {
+      const startTime = performance.now();
+      if (currentAudioElement) {
+        currentAudioElement.pause();
+        currentAudioElement.src = "";
+        currentAudioElement = null;
+      }
+      // Revoke any queued objects
+      while (audioQueue.length > 0) {
+        const item = audioQueue.shift();
+        try { URL.revokeObjectURL(item.url); } catch (e) {}
+      }
+      isPlayingAudio = false;
+      updateStatus("connected", "Interrupted (Cleared)");
+      const duration = (performance.now() - startTime).toFixed(1);
+      console.log(`⚡ Audio playback queue flushed in ${duration}ms!`);
+    }
+
+    function triggerBargeInFlash() {
+      const overlay = document.getElementById("bargeInOverlay");
+      overlay.classList.add("flash");
+      setTimeout(() => overlay.classList.remove("flash"), 180);
+    }
+
+    // Microphone & 16kHz PCM Capture
+    async function toggleMicrophone() {
+      if (!isRecording) {
+        await startRecording();
+      } else {
+        stopRecording();
+      }
+    }
+
+    async function startRecording() {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+          sampleRate: 16000
+        });
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            sampleRate: 16000,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+
+        const source = audioContext.createMediaStreamSource(mediaStream);
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 64;
+        source.connect(analyserNode);
+
+        // ScriptProcessorNode for reliable raw PCM capture
+        scriptProcessor = audioContext.createScriptProcessor(512, 1, 1);
+        scriptProcessor.onaudioprocess = (event) => {
+          if (!isRecording || !ws || ws.readyState !== WebSocket.OPEN) return;
+          const inputData = event.inputBuffer.getChannelData(0);
+          
+          // Convert Float32 [-1.0, 1.0] to 16-bit PCM Int16
+          const pcm16 = new Int16Array(inputData.length);
+          for (let i = 0; i < inputData.length; i++) {
+            let s = Math.max(-1, Math.min(1, inputData[i]));
+            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+          }
+          ws.send(pcm16.buffer);
+        };
+
+        source.connect(scriptProcessor);
+        scriptProcessor.connect(audioContext.destination);
+
+        isRecording = true;
+        document.getElementById("micButton").classList.add("active");
+        document.getElementById("micButtonText").innerText = "Stop Microphone";
+        updateStatus("listening", "Listening...");
+        drawVisualizer();
+      } catch (err) {
+        console.error("Microphone access failed:", err);
+        alert("Microphone permission denied or device unavailable. Please ensure microphone access is granted.");
+      }
+    }
+
+    function stopRecording() {
+      isRecording = false;
+      if (scriptProcessor) {
+        scriptProcessor.disconnect();
+        scriptProcessor = null;
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+      }
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+      }
+      document.getElementById("micButton").classList.remove("active");
+      document.getElementById("micButtonText").innerText = "Start Microphone";
+      updateStatus("connected", "Connected");
+    }
+
+    // Canvas Waveform Drawing
+    function drawVisualizer() {
+      if (!analyserNode) return;
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function render() {
+        if (!isRecording) return;
+        animFrameId = requestAnimationFrame(render);
+        analyserNode.getByteTimeDomainData(dataArray);
+
+        canvasCtx.fillStyle = "rgba(7, 9, 14, 0.4)";
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = "#06b6d4";
+        canvasCtx.beginPath();
+
+        const sliceWidth = canvas.width * 1.0 / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = v * canvas.height / 2;
+          if (i === 0) canvasCtx.moveTo(x, y);
+          else canvasCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
+
+        canvasCtx.lineTo(canvas.width, canvas.height / 2);
+        canvasCtx.stroke();
+      }
+      render();
+    }
+
+    // UI Message Feed
+    function appendTranscript(role, text, lang) {
+      const feed = document.getElementById("conversationFeed");
+      const bubble = document.createElement("div");
+      bubble.className = `message-bubble ${role === "user" ? "message-user" : "message-assistant"}`;
+
+      const header = document.createElement("div");
+      header.className = "msg-header";
+      header.innerHTML = `<span>${role === "user" ? "YOU" : "VAANI"}</span><span>${lang || ""}</span>`;
+
+      const content = document.createElement("div");
+      content.innerText = text;
+
+      bubble.appendChild(header);
+      bubble.appendChild(content);
+      feed.appendChild(bubble);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendBargeInEvent() {
+      const feed = document.getElementById("conversationFeed");
+      const pill = document.createElement("div");
+      pill.className = "event-pill event-barge-in";
+      pill.innerHTML = `⚡ Barge-In Detected (Interrupted Agent in &lt;15ms)`;
+      feed.appendChild(pill);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendToolEvent(name, result) {
+      const feed = document.getElementById("conversationFeed");
+      const pill = document.createElement("div");
+      pill.className = "event-pill event-tool";
+      pill.innerHTML = `🛠️ Tool Executed: <strong>${name}</strong>`;
+      feed.appendChild(pill);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    // Quick Voice Prompt Simulation
+    function simulateVoicePrompt(text) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "text_input", text: text }));
+      }
+    }
+
+    // Provider Change
+    function changeProvider(provider) {
+      currentProvider = provider;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "set_provider", provider: provider }));
+      }
+    }
+
+    // Tab Switching for Live State
+    function switchTab(tabKey) {
+      activeTab = tabKey;
+      document.querySelectorAll(".tab-btn").forEach((btn, index) => {
+        const keys = ["orders", "appointments", "tickets"];
+        if (keys[index] === tabKey) btn.classList.add("active");
+        else btn.classList.remove("active");
+      });
+      renderStateViewer();
+    }
+
+    function renderStateViewer() {
+      const viewer = document.getElementById("jsonViewer");
+      const slice = liveState[activeTab] || liveState;
+      viewer.innerText = JSON.stringify(slice, null, 2);
+    }
+
+    async function resetDatabaseState() {
+      try {
+        const res = await fetch("/api/state/reset", { method: "POST" });
+        const data = await res.json();
+        liveState = data.session_state;
+        renderStateViewer();
+      } catch (e) {
+        console.error("Failed to reset state:", e);
+      }
+    }
+
+    // Fetch initial state & connect
+    window.addEventListener("DOMContentLoaded", async () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      connectWebSocket();
+      try {
+        const res = await fetch("/api/state");
+        const data = await res.json();
+        liveState = data.session_state || {};
+        renderStateViewer();
+      } catch (e) {
+        console.warn("Could not fetch initial state:", e);
+      }
+    });
+  </script>
+</body>
+</html>
