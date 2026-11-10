@@ -263,9 +263,12 @@ async def voice_websocket_endpoint(websocket: WebSocket):
                 except Exception as e:
                     logger.debug("Failed parsing text message: %s", e)
 
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, RuntimeError):
         logger.info("Client disconnected from /ws/voice")
     except Exception as e:
         logger.error("Unhandled error in /ws/voice loop: %s", e)
     finally:
-        orchestrator.trigger_barge_in()
+        try:
+            orchestrator.trigger_barge_in()
+        except Exception:
+            pass

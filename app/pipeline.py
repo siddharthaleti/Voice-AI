@@ -226,12 +226,26 @@ class VoiceSessionOrchestrator:
         accumulated_assistant_text = ""
         tool_calls_accumulator: Dict[int, Dict[str, Any]] = {}
 
-        try:
-            stream = await self._call_groq_stream(client, model_to_use)
-        except Exception as e:
-            logger.warning("Primary model %s failed (%s), switching to fallback %s", model_to_use, e, self.settings.groq_fallback_model)
-            model_to_use = self.settings.groq_fallback_model
-            stream = await self._call_groq_stream(client, model_to_use)
+        # Candidate models with resilient fallback chain
+        candidate_models = []
+        for m in [self.settings.groq_primary_model, self.settings.groq_fallback_model, "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]:
+            if m and m not in candidate_models:
+                candidate_models.append(m)
+
+        stream = None
+        for candidate in candidate_models:
+            try:
+                stream = await self._call_groq_stream(client, candidate)
+                model_to_use = candidate
+                break
+            except Exception as e:
+                logger.warning("Groq model %s failed (%s), trying next fallback...", candidate, e)
+
+        if not stream:
+            logger.error("All Groq LLM candidate models failed.")
+            await tts_queue.put(None)
+            await tts_worker_task
+            return
 
         try:
             async for chunk in stream:

@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     speech_provider: Literal["free", "sarvam"] = "free"
 
     # LLM Models
-    groq_primary_model: str = "llama-3.3-70b-versatile"
-    groq_fallback_model: str = "llama-3.1-8b-instant"
+    groq_primary_model: str = "qwen/qwen3.8-27b"
+    groq_fallback_model: str = "openai/gpt-oss-20b"
 
     # Silero VAD parameters
     vad_threshold: float = 0.65
